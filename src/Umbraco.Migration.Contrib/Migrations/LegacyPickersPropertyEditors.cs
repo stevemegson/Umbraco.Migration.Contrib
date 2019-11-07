@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Core.Persistence;
-using Umbraco.Core.Persistence.Dtos;
-using Umbraco.Core.PropertyEditors;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Migrations.PostMigrations;
 using Umbraco.Core.Models;
@@ -12,6 +10,7 @@ using Newtonsoft.Json;
 using Umbraco.Core;
 using Umbraco.Core.Migrations;
 using Umbraco.Core.Migrations.Upgrade.V_8_0_0;
+using Umbraco.Migration.Contrib.Dtos;
 
 namespace Umbraco.Migration.Contrib.Migrations
 {
@@ -122,6 +121,19 @@ namespace Umbraco.Migration.Contrib.Migrations
                 propData.VarcharValue = String.Join(",", values);
             }
             return true;
+        }
+
+        private List<DataTypeDto> GetDataTypes(string editorAlias, bool strict = true)
+        {
+            var sql = Sql()
+                .Select<DataTypeDto>()
+                .From<DataTypeDto>();
+
+            sql = strict
+                ? sql.Where<DataTypeDto>(x => x.EditorAlias == editorAlias)
+                : sql.Where<DataTypeDto>(x => x.EditorAlias.Contains(editorAlias));
+
+            return Database.Fetch<DataTypeDto>(sql);
         }
     }
 }

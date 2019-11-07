@@ -2,6 +2,7 @@
 using Umbraco.Core.Migrations;
 using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.Dtos;
+using Umbraco.Migration.Contrib.Dtos;
 
 namespace Umbraco.Migration.Contrib.Migrations
 {

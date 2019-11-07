@@ -71,7 +71,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Composer.cs" />
-    <Compile Include="DatabaseUpgradeStep.cs" />
+    <Compile Include="Dtos\ContentDto.cs" />
+    <Compile Include="Dtos\ContentType2ContentTypeDto.cs" />
+    <Compile Include="Dtos\ContentTypeDto.cs" />
+    <Compile Include="Dtos\ContentVersionDto.cs" />
+    <Compile Include="Dtos\DataTypeDto.cs" />
+    <Compile Include="Dtos\DocumentDto.cs" />
+    <Compile Include="Dtos\DocumentVersionDto.cs" />
+    <Compile Include="Dtos\MediaVersionDto.cs" />
+    <Compile Include="Dtos\NodeDto.cs" />
+    <Compile Include="Dtos\PropertyDataDto.cs" />
+    <Compile Include="Dtos\PropertyTypeDto.cs" />
+    <Compile Include="Migrations\Class1.cs" />
     <Compile Include="Migrations\DataTypes\CheckBoxListPreValueMigrator.cs" />
     <Compile Include="Migrations\DataTypes\LegacyContentPickerPreValueMigrator.cs" />
     <Compile Include="Migrations\DataTypes\LegacyMediaPickerPreValueMigrator.cs" />

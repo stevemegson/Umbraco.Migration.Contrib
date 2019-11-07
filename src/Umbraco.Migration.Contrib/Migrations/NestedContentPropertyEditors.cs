@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Umbraco.Core;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Migrations;
@@ -12,6 +13,7 @@ using Umbraco.Core.Models;
 using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.Dtos;
 using Umbraco.Core.PropertyEditors;
+using Umbraco.Migration.Contrib.Dtos;
 
 namespace Umbraco.Migration.Contrib.Migrations
 {
@@ -288,6 +290,95 @@ namespace Umbraco.Migration.Contrib.Migrations
             }
 
             return refreshCache;
+        }
+
+        private bool UpdatePropertyDataDto(PropertyDataDto propData, ValueListConfiguration config, bool isMultiple)
+        {
+            //Get the INT ids stored for this property/drop down
+            int[] ids = null;
+            if (!propData.VarcharValue.IsNullOrWhiteSpace())
+            {
+                ids = ConvertStringValues(propData.VarcharValue);
+            }
+            else if (!propData.TextValue.IsNullOrWhiteSpace())
+            {
+                ids = ConvertStringValues(propData.TextValue);
+            }
+            else if (propData.IntegerValue.HasValue)
+            {
+                ids = new[] { propData.IntegerValue.Value };
+            }
+
+            // if there are INT ids, convert them to values based on the configuration
+            if (ids == null || ids.Length <= 0) return false;
+
+            // map ids to values
+            var values = new List<string>();
+            var canConvert = true;
+
+            foreach (var id in ids)
+            {
+                var val = config.Items.FirstOrDefault(x => x.Id == id);
+                if (val != null)
+                {
+                    values.Add(val.Value);
+                    continue;
+                }
+
+                Logger.Warn(GetType(), "Could not find PropertyData {PropertyDataId} value '{PropertyValue}' in the datatype configuration: {Values}.",
+                    propData.Id, id, string.Join(", ", config.Items.Select(x => x.Id + ":" + x.Value)));
+                canConvert = false;
+            }
+
+            if (!canConvert) return false;
+
+            propData.VarcharValue = isMultiple ? JsonConvert.SerializeObject(values) : values[0];
+            propData.TextValue = null;
+            propData.IntegerValue = null;
+            return true;
+        }
+
+        private List<DataTypeDto> GetDataTypes(string editorAlias, bool strict = true)
+        {
+            var sql = Sql()
+                .Select<DataTypeDto>()
+                .From<DataTypeDto>();
+
+            sql = strict
+                ? sql.Where<DataTypeDto>(x => x.EditorAlias == editorAlias)
+                : sql.Where<DataTypeDto>(x => x.EditorAlias.Contains(editorAlias));
+
+            return Database.Fetch<DataTypeDto>(sql);
+        }
+
+        internal class RelatedLink
+        {
+            public int? Id { get; internal set; }
+            internal bool IsDeleted { get; set; }
+            [JsonProperty("caption")]
+            public string Caption { get; set; }
+            [JsonProperty("link")]
+            public string Link { get; set; }
+            [JsonProperty("newWindow")]
+            public bool NewWindow { get; set; }
+            [JsonProperty("isInternal")]
+            public bool IsInternal { get; set; }
+        }
+
+        [DataContract]
+        internal class LinkDto
+        {
+            [DataMember(Name = "name")]
+            public string Name { get; set; }
+
+            [DataMember(Name = "target")]
+            public string Target { get; set; }
+
+            [DataMember(Name = "udi")]
+            public GuidUdi Udi { get; set; }
+
+            [DataMember(Name = "url")]
+            public string Url { get; set; }
         }
 
     }

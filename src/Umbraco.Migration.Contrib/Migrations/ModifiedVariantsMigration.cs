@@ -6,7 +6,7 @@ using Umbraco.Core;
 using Umbraco.Core.Migrations;
 using Umbraco.Core.Migrations.Install;
 using Umbraco.Core.Persistence;
-using Umbraco.Core.Persistence.Dtos;
+using Umbraco.Migration.Contrib.Dtos;
 
 namespace Umbraco.Migration.Contrib.Migrations
 {
@@ -104,8 +104,7 @@ HAVING COUNT(v2.id) <> 1").Any())
 
         private void CreatePropertyDataIndexes()
         {
-            var tableDefinition = Core.Persistence.DatabaseModelDefinitions.DefinitionFactory.GetTableDefinition(typeof(PropertyDataDto), SqlSyntax);
-            Execute.Sql(SqlSyntax.FormatPrimaryKey(tableDefinition)).Do();
+            Execute.Sql("ALTER TABLE [umbracoPropertyData] ADD CONSTRAINT [PK_umbracoPropertyData] PRIMARY KEY ([id])").Do();
             Execute.Sql("CREATE UNIQUE NONCLUSTERED INDEX[IX_umbracoPropertyData_VersionId] ON [umbracoPropertyData]([versionId],[propertyTypeId],[languageId],[segment])").Do();
         }
 

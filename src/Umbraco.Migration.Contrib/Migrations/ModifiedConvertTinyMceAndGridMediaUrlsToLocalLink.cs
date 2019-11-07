@@ -10,6 +10,7 @@ using Umbraco.Core.Migrations.PostMigrations;
 using Umbraco.Core.Persistence;
 using Umbraco.Core.Persistence.Dtos;
 using Umbraco.Core.Services;
+using Umbraco.Migration.Contrib.Dtos;
 
 namespace Umbraco.Migration.Contrib.Migrations
 {
