@@ -374,7 +374,12 @@ SELECT nodeId FROM {PreTables.ContentVersion} cv INNER JOIN {Constants.DatabaseS
             }
             else
             {
+                // TODO: Adding column just to get the SQL to execute after the rename
+                AddColumn<T>(tableName, newName, out var sqls);
+                Delete.Column(currentName).FromTable(tableName).Do();
+                
                 Execute.Sql(SqlSyntax.FormatColumnRename(tableName, currentName, newName)).Do();
+                foreach (var sql in sqls) Execute.Sql(sql).Do();
             }
         }
     }

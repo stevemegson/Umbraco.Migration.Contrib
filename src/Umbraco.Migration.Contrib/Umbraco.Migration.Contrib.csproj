@@ -82,7 +82,6 @@
     <Compile Include="Dtos\NodeDto.cs" />
     <Compile Include="Dtos\PropertyDataDto.cs" />
     <Compile Include="Dtos\PropertyTypeDto.cs" />
-    <Compile Include="Migrations\Class1.cs" />
     <Compile Include="Migrations\DataTypes\CheckBoxListPreValueMigrator.cs" />
     <Compile Include="Migrations\DataTypes\LegacyContentPickerPreValueMigrator.cs" />
     <Compile Include="Migrations\DataTypes\LegacyMediaPickerPreValueMigrator.cs" />
