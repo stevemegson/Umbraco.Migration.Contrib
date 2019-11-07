@@ -25,6 +25,8 @@ namespace Umbraco.Migration.Contrib.Migrations
 
         private ConfigurationEditor _valueListConfigEditor;
 
+        private Lazy<Dictionary<int, NodeDto>> _nodeIdToKey;
+
         public NestedContentPropertyEditors(IMigrationContext context)
             : base(context)
         { }
@@ -55,6 +57,14 @@ namespace Umbraco.Migration.Contrib.Migrations
 
             _elementTypesInUse = new HashSet<int>();
             _propertyTypes = new Dictionary<int, List<PropertyTypeDto>>();
+
+            _nodeIdToKey = new Lazy<Dictionary<int, NodeDto>>(
+                () => Context.Database.Fetch<NodeDto>(
+                    Context.SqlContext.Sql()
+                        .Select<NodeDto>(x => x.NodeId, x => x.NodeObjectType, x => x.UniqueId)
+                        .From<NodeDto>()
+                    ).ToDictionary(n => n.NodeId)
+                );
         }
 
         private bool UpdatePropertyData()
@@ -146,6 +156,19 @@ namespace Umbraco.Migration.Contrib.Migrations
 
                 switch (pt.DataTypeDto.EditorAlias)
                 {
+                    case "Umbraco.ContentPickerAlias":
+                    case Constants.PropertyEditors.Aliases.MemberPicker:
+                    case Constants.PropertyEditors.Aliases.MediaPicker:
+                    case Constants.PropertyEditors.Aliases.MultipleMediaPicker:
+                    case Constants.PropertyEditors.Aliases.MultiNodeTreePicker:
+                        if (UpdateLegacyPicker(propertyValue, out string newPropertyValue))
+                        {
+                            element[pt.Alias] = newPropertyValue;
+                            changed = true;
+                        }
+                            
+                        break;
+
                     case Constants.PropertyEditors.Aliases.RadioButtonList:
                     case Constants.PropertyEditors.Aliases.CheckBoxList:
                     case Constants.PropertyEditors.Aliases.DropDownListFlexible:
@@ -207,6 +230,34 @@ namespace Umbraco.Migration.Contrib.Migrations
             }
 
             return propertyValue;
+        }
+
+        private bool UpdateLegacyPicker(string propertyValue, out string newPropertyValue)
+        {
+            newPropertyValue = null;
+
+            //Get the INT ids stored for this property/drop down
+            int[] ids = null;
+            if (!propertyValue.IsNullOrWhiteSpace())
+            {
+                ids = ConvertStringValues(propertyValue);
+            }
+
+            if (ids == null || ids.Length <= 0) return false;
+
+            // map ids to values
+            var values = new List<Udi>();
+
+            foreach (var id in ids)
+            {
+                if (_nodeIdToKey.Value.TryGetValue(id, out var node))
+                {
+                    values.Add(Udi.Create(ObjectTypes.GetUdiType(node.NodeObjectType.Value), node.UniqueId));
+                }
+            }
+            newPropertyValue = String.Join(",", values);
+
+            return true;
         }
 
         private string ConvertRelatedLinksToMultiUrlPicker(string value)
